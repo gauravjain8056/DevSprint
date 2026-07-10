@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://via.placeholder.com/1200x400/0f172a/14b8a6?text=DevSprint+-+AI+Powered+Project+Management" alt="DevSprint Banner" width="100%" />
 
   <h1>DevSprint</h1>
   <p><strong>Intelligent Project Management & Kanban Software powered by Google Gemini</strong></p>
