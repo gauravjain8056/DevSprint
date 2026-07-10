@@ -6,7 +6,8 @@ import { AuthService } from "../services/auth.service.js";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: true,
+  sameSite: "none" as const,
 };
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
