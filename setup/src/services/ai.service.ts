@@ -101,7 +101,7 @@ export class AiService {
       case "deleteTask":
         return await TaskService.deleteTask(userId, args.taskId);
       case "summarizeProject": {
-        const tasks = await TaskService.getTasksOfProject(userId, projectId);
+        const tasks = await TaskService.getTasksOfProject(userId, projectId) as any[];
         return {
           totalTasks: tasks.length,
           todo: tasks.filter((t: any) => t.status === "TODO").length,

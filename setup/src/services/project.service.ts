@@ -55,7 +55,7 @@ export class ProjectService {
     const cacheKey = `project:${projectId}:details`;
     const cachedProject = await RedisService.get(cacheKey);
 
-    let project;
+    let project: any;
     if (cachedProject) {
       project = cachedProject;
     }
