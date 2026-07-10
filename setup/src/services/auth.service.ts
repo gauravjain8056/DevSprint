@@ -18,7 +18,7 @@ export class AuthService {
       },
       process.env.ACCESS_TOKEN_SECRET as string,
       {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRY as string,
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY as any,
       }
     );
 
@@ -28,7 +28,7 @@ export class AuthService {
       },
       process.env.REFRESH_TOKEN_SECRET as string,
       {
-        expiresIn: process.env.REFRESH_TOKEN_EXPIRY as string,
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRY as any,
       }
     );
 
