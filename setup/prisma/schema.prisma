@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  MEMBER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  fullName     String
+  avatarUrl    String?
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ownedProjects      Project[]       @relation("ProjectOwner")
+  projectMemberships ProjectMember[]
+  createdTasks       Task[]          @relation("TaskCreator")
+  assignedTasks      Task[]          @relation("TaskAssignee")
+  uploadedFiles      Attachment[]    @relation("AttachmentUploader")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner   User            @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members ProjectMember[]
+  tasks   Task[]
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  role      Role
+  joinedAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus
+  priority    TaskPriority
+  position    Float
+  dueDate     DateTime?
+  projectId   String
+  assigneeId  String?
+  createdById String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee    User?        @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy   User         @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+}
+
+model Attachment {
+  id           String   @id @default(uuid())
+  filename     String
+  url          String
+  publicId     String
+  mimeType     String
+  size         Int
+  taskId       String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  task       Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation("AttachmentUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
+}

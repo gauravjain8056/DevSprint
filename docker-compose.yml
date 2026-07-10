@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: devsprint-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-devsprint}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-devsprint}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devsprint-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: devsprint-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devsprint-network
+
+  backend:
+    build:
+      context: ./setup
+      dockerfile: Dockerfile
+    container_name: devsprint-backend
+    environment:
+      - PORT=8000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-devsprint}?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-supersecretjwtkey}
+      - JWT_EXPIRY=${JWT_EXPIRY:-1d}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:-supersecretrefreshtokenkey}
+      - REFRESH_TOKEN_EXPIRY=${REFRESH_TOKEN_EXPIRY:-7d}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - devsprint-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devsprint-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - devsprint-network
+
+networks:
+  devsprint-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
